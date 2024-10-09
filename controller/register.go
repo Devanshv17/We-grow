@@ -33,7 +33,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := utils.FirebaseAuth.CreateUser(context.Background(), params)
 	if err != nil {
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "Email already Exists", http.StatusInternalServerError)
 		log.Printf("Failed to create user: %v\n", err)
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,32 +39,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set custom claims including role from the request body
-	claims := map[string]interface{}{
-		"role":    role,
-		"user_id": user.Email, // Using email as the user_id
-	}
-
-	// Generate custom token with claims
-	token, err := utils.FirebaseAuth.CustomTokenWithClaims(context.Background(), user.Email, claims)
-	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
-		log.Printf("Failed to create custom token: %v\n", err)
-		return
-	}
-
-	// Set token expiration time (e.g., 1 hour)
-	expirationTime := time.Now().Add(time.Hour).Unix()
-
-	// Create the response payload
+	// Create the response payload including UID and role
 	response := map[string]interface{}{
-		"token":   token,
-		"expires": expirationTime,
+		"user_id": u.UID, // Use the UID directly instead of email
 		"role":    role,
-		"user_id": user.Email,
 	}
 
-	// Return the token in the response
+	// Return the user ID and role in the response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {

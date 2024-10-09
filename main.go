@@ -21,6 +21,7 @@ func main() {
 	r.HandleFunc("/login", controller.LoginHandler).Methods("POST")
 	r.HandleFunc("/forget-password", controller.ForgotPasswordHandler).Methods("POST")
 	r.HandleFunc("/resend-verification", controller.ResendVerificationHandler).Methods("POST")
+	r.HandleFunc("/enter_data", controller.EnterDataHandler).Methods("POST")
 
 	// Start server
 	fmt.Println("Server started on port 8080")
