@@ -53,6 +53,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/hashed_password").Set(context.Background(), string(hashedPassword))
+	if err != nil {
+		http.Error(w, "Failed to save user password", http.StatusInternalServerError)
+		log.Printf("Failed to save user password: %v\n", err)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("User registered successfully"))
 }
