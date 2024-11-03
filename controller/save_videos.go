@@ -38,7 +38,7 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 // GetVideosHandler handles fetching videos from the database for a given user or by tags
 func GetVideosHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the UID and tag from the query parameters
-	uid := r.URL.Query().Get("uid")
+	creator := r.URL.Query().Get("creator")
 	tag := r.URL.Query().Get("tag")
 
 	var videos map[string]model.Video
@@ -51,11 +51,11 @@ func GetVideosHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Filter by UID if provided
-	if uid != "" {
+	// Filter by Creator if provided
+	if creator != "" {
 		filteredVideos := make(map[string]model.Video)
 		for key, video := range videos {
-			if video.UID == uid { // Ensure video matches the UID
+			if video.Creator == creator { // Ensure video matches the creator
 				filteredVideos[key] = video
 			}
 		}
