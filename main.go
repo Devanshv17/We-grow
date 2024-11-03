@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/controller"
+	"backend/middleware"
 	"backend/utils"
 	"fmt"
 	"log"
@@ -25,6 +26,9 @@ func main() {
 	r.HandleFunc("/videos", controller.SaveVideoHandler).Methods("POST")
 	r.HandleFunc("/videos", controller.GetVideosHandler).Methods("GET")
 	r.HandleFunc("/profile", controller.GetProfileHandler).Methods("GET")
+
+	// Use CORS middleware
+	http.Handle("/", middleware.CORS(r))
 
 	// Start server
 	fmt.Println("Server started on port 8080")
