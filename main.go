@@ -17,6 +17,9 @@ func main() {
 
 	r := mux.NewRouter()
 
+	// Apply CORS middleware
+	r.Use(middleware.CORS)
+
 	// Register routes
 	r.HandleFunc("/register", controller.RegisterHandler).Methods("POST")
 	r.HandleFunc("/login", controller.LoginHandler).Methods("POST")
@@ -26,9 +29,6 @@ func main() {
 	r.HandleFunc("/videos", controller.SaveVideoHandler).Methods("POST")
 	r.HandleFunc("/videos", controller.GetVideosHandler).Methods("GET")
 	r.HandleFunc("/profile", controller.GetProfileHandler).Methods("GET")
-
-	// Use CORS middleware
-	http.Handle("/", middleware.CORS(r))
 
 	// Start server
 	fmt.Println("Server started on port 8080")
