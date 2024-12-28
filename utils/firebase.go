@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 
@@ -45,4 +46,16 @@ func InitFirebase() {
 	if err != nil {
 		log.Fatalf("Error initializing Firebase Database client: %v\n", err)
 	}
+}
+
+func VerifyIDToken(idToken string) (*auth.Token, error) {
+	// Verify the token using the Firebase Auth client
+	token, err := FirebaseAuth.VerifyIDToken(context.Background(), idToken)
+	if err != nil {
+		log.Printf("Error verifying ID token: %v", err)
+		return nil, errors.New("Invalid or expired token")
+	}
+
+	// Return the decoded token (which contains the user's UID and other claims)
+	return token, nil
 }

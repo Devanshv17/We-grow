@@ -15,7 +15,7 @@ import (
 func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	var post model.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Request: Unable to decode JSON", http.StatusBadRequest)
 		return
 	}
 
@@ -38,7 +38,13 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 	var comment model.Comment
 	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		http.Error(w, "Bad Request: Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Check if userId is empty or missing
+	if comment.UserID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
 
@@ -83,7 +89,6 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if comments should be included (optional query param)
 	includeComments := r.URL.Query().Get("includeComments") == "true"
-
 	if includeComments {
 		for postID, post := range posts {
 			// Fetch the comments for each post directly from Firebase
