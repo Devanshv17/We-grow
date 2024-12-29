@@ -19,6 +19,12 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ensure that the username is provided
+	if post.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
 	// Set post metadata
 	post.ID = uuid.New().String()
 	post.CreatedAt = time.Now().Unix()
@@ -42,25 +48,37 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if userId is empty or missing
-	if comment.UserID == "" {
-		http.Error(w, "User ID is required", http.StatusBadRequest)
+	// Check if username is empty or missing
+	if comment.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
 		return
 	}
 
-	// Fetch the user's role from Firebase
-	var role string
-	err := utils.FirebaseDB.NewRef("users/"+comment.UserID+"/role").Get(context.Background(), &role)
-	if err != nil {
+	// Query to get the user by username
+	var users map[string]model.User
+	err := utils.FirebaseDB.NewRef("users").
+		OrderByChild("username").
+		EqualTo(comment.Username).
+		LimitToFirst(1).
+		Get(context.Background(), &users)
+
+	if err != nil || len(users) == 0 {
 		http.Error(w, "Failed to verify user role", http.StatusInternalServerError)
 		return
+	}
+
+	// Get the first user (should be unique due to username being unique)
+	var user model.User
+	for _, u := range users {
+		user = u
+		break
 	}
 
 	// Set comment metadata
 	comment.ID = uuid.New().String()
 	comment.CreatedAt = time.Now().Unix()
-	comment.IsAdmin = role == "admin"
-	comment.Role = role
+	comment.IsAdmin = user.Role == "admin"
+	comment.Role = user.Role
 
 	// Get post ID from query parameters
 	postID := r.URL.Query().Get("post_id")

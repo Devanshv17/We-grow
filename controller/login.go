@@ -71,10 +71,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var username string
+	err = utils.FirebaseDB.NewRef("users/"+u.UID+"/username").Get(context.Background(), &username)
+	if err != nil {
+		log.Printf("Username not found for user %s. Defaulting to empty string.", u.UID)
+		username = ""
+	}
+
 	// Prepare response payload with UID and role
 	response := map[string]interface{}{
-		"user_id": u.UID,
-		"role":    role,
+		"user_id":  u.UID,
+		"username": username,
+		"role":     role,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

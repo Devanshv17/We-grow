@@ -9,4 +9,5 @@ type User struct {
 	Gender      string `json:"gender"` // Should be 'male', 'female', or 'others'
 	City        string `json:"city"`
 	ChildDOB    string `json:"child_dob"` // Child's date of birth
+	Username    string `json:"username"`  // Unique username
 }

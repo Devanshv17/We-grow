@@ -1,10 +1,9 @@
-// backend/model/post.go
 package model
 
 // Post represents a user's post
 type Post struct {
 	ID         string             `json:"id"`
-	UserID     string             `json:"user_id"`
+	Username   string             `json:"username"` // Replaced userID with username
 	Content    string             `json:"content"`
 	ImageURL   string             `json:"image_url"`
 	CreatedAt  int64              `json:"created_at"`
@@ -14,7 +13,7 @@ type Post struct {
 
 type Comment struct {
 	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
+	Username  string `json:"username"` // Replaced userID with username
 	Content   string `json:"content"`
 	CreatedAt int64  `json:"created_at"`
 	IsAdmin   bool   `json:"is_admin"`
