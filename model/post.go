@@ -8,6 +8,7 @@ type Post struct {
 	ImageURL   string             `json:"image_url"`
 	CreatedAt  int64              `json:"created_at"`
 	IsResolved bool               `json:"is_resolved"`
+	Tags       []string           `json:"tags"`     // New field for tags
 	Comments   map[string]Comment `json:"comments"` // Comments stored as a map of Comment structs
 }
 

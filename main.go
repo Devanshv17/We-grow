@@ -29,10 +29,13 @@ func main() {
 	r.HandleFunc("/username", controller.ChangeUsernameHandler).Methods("POST")
 	r.HandleFunc("/videos", controller.SaveVideoHandler).Methods("POST")
 	r.HandleFunc("/videos", controller.GetVideosHandler).Methods("GET")
+	r.HandleFunc("/videos/top", controller.SaveTopVideoHandler).Methods("POST")
+	r.HandleFunc("/videos/top", controller.GetTopVideosHandler).Methods("GET")
 	r.HandleFunc("/profile", controller.GetProfileHandler).Methods("GET")
 	r.HandleFunc("/posts", controller.CreatePostHandler).Methods("POST")
 	r.HandleFunc("/posts", controller.GetPostsHandler).Methods("GET")
 	r.HandleFunc("/posts/comment", controller.AddCommentHandler).Methods("POST")
+	r.HandleFunc("/posts/tags", controller.GetPostsByTagsHandler).Methods("GET")
 
 	// Start server
 	fmt.Println("Server started on port 8080")

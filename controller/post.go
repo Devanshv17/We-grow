@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +26,16 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ensure tags are provided and valid
+	if len(post.Tags) == 0 {
+		http.Error(w, "At least one tag is required", http.StatusBadRequest)
+		return
+	}
+
+	for i, tag := range post.Tags {
+		post.Tags[i] = strings.ToLower(strings.TrimSpace(tag)) // Normalize tags
+	}
+
 	// Set post metadata
 	post.ID = uuid.New().String()
 	post.CreatedAt = time.Now().Unix()
@@ -38,6 +49,44 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(post)
+}
+
+// GetPostsByTagsHandler fetches posts that match specific tags
+func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
+	// Get tags from query parameters
+	tagsParam := r.URL.Query().Get("tags")
+	if tagsParam == "" {
+		http.Error(w, "Tags are required", http.StatusBadRequest)
+		return
+	}
+
+	// Split the tags by comma and normalize
+	tags := strings.Split(tagsParam, ",")
+	for i, tag := range tags {
+		tags[i] = strings.ToLower(strings.TrimSpace(tag))
+	}
+
+	// Fetch all posts
+	var posts map[string]model.Post
+	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter posts by tags
+	matchingPosts := make(map[string]model.Post)
+	for postID, post := range posts {
+		for _, tag := range post.Tags {
+			for _, queryTag := range tags {
+				if tag == queryTag {
+					matchingPosts[postID] = post
+					break
+				}
+			}
+		}
+	}
+
+	json.NewEncoder(w).Encode(matchingPosts)
 }
 
 // AddCommentHandler adds a comment to a specific post
