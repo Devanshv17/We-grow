@@ -2,7 +2,7 @@
 package controller
 
 import (
-	"backend/model" // Import the Video model from models/video.go
+	"backend/model"
 	"backend/utils"
 	"context"
 	"encoding/json"

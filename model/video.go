@@ -7,4 +7,5 @@ type Video struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	IsTopVideo  bool     `json:"isTopVideo"`
+	Thumbnail   string   `json:"thumbnail"`
 }
