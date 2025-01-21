@@ -4,6 +4,7 @@ package model
 type Post struct {
 	ID         string             `json:"id"`
 	Username   string             `json:"username"` // Replaced userID with username
+	Title      string             `json:"title"`
 	Content    string             `json:"content"`
 	ImageURL   string             `json:"image_url"`
 	CreatedAt  int64              `json:"created_at"`
