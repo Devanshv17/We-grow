@@ -10,4 +10,5 @@ type User struct {
 	City        string `json:"city"`
 	ChildDOB    string `json:"child_dob"` // Child's date of birth
 	Username    string `json:"username"`  // Unique username
+	Age         int    `json:"age"`
 }

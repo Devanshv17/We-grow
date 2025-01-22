@@ -19,6 +19,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate that age is a positive integer
+	if user.Age <= 0 {
+		http.Error(w, "Invalid age", http.StatusBadRequest)
+		return
+	}
+
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
@@ -26,6 +33,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Create the Firebase user
 	params := (&auth.UserToCreate{}).
 		Email(user.Email).
 		Password(string(hashedPassword)).
@@ -38,6 +46,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Send verification email
 	err = utils.SendVerificationEmail(newUser)
 	if err != nil {
 		http.Error(w, "Failed to send verification email", http.StatusInternalServerError)
@@ -53,6 +62,29 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Save other user details
+	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/gender").Set(context.Background(), user.Gender)
+	if err != nil {
+		http.Error(w, "Failed to save gender", http.StatusInternalServerError)
+		log.Printf("Failed to save gender: %v\n", err)
+		return
+	}
+
+	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/age").Set(context.Background(), user.Age)
+	if err != nil {
+		http.Error(w, "Failed to save age", http.StatusInternalServerError)
+		log.Printf("Failed to save age: %v\n", err)
+		return
+	}
+
+	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/phone_number").Set(context.Background(), user.PhoneNumber)
+	if err != nil {
+		http.Error(w, "Failed to save phone number", http.StatusInternalServerError)
+		log.Printf("Failed to save phone number: %v\n", err)
+		return
+	}
+
+	// Save hashed password
 	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/hashed_password").Set(context.Background(), string(hashedPassword))
 	if err != nil {
 		http.Error(w, "Failed to save user password", http.StatusInternalServerError)
@@ -60,6 +92,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Successfully created user
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("User registered successfully"))
 }
