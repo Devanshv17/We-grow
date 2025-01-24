@@ -19,12 +19,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate that age is a positive integer
-	if user.Age <= 0 {
-		http.Error(w, "Invalid age", http.StatusBadRequest)
-		return
-	}
-
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -67,13 +61,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to save gender", http.StatusInternalServerError)
 		log.Printf("Failed to save gender: %v\n", err)
-		return
-	}
-
-	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/age").Set(context.Background(), user.Age)
-	if err != nil {
-		http.Error(w, "Failed to save age", http.StatusInternalServerError)
-		log.Printf("Failed to save age: %v\n", err)
 		return
 	}
 
