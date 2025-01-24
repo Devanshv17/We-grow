@@ -31,8 +31,20 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Send a customized notification for the video
+	title := "New Video Posted: " + video.Title
+	body := "Check out " + video.Creator + "'s latest video on " + video.Title + "!"
+
+	err := utils.SendNotificationToTopic("new-videos", title, body)
+	if err != nil {
+		log.Printf("Failed to send notification: %v\n", err)
+		http.Error(w, "Failed to send notification", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("Video saved successfully and notification sent for video ID: %s", videoID)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Video saved successfully"))
+	w.Write([]byte("Video saved and notification sent successfully"))
 }
 
 // GetVideosHandler handles fetching videos from the database for a given user or by tags

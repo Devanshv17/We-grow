@@ -9,6 +9,7 @@ import (
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	"firebase.google.com/go/db"
+	"firebase.google.com/go/messaging"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 )
@@ -16,6 +17,7 @@ import (
 var (
 	FirebaseAuth *auth.Client
 	FirebaseDB   *db.Client
+	fcmClient    *messaging.Client
 )
 
 func InitFirebase() {
@@ -46,6 +48,11 @@ func InitFirebase() {
 	if err != nil {
 		log.Fatalf("Error initializing Firebase Database client: %v\n", err)
 	}
+
+	fcmClient, err = app.Messaging(context.Background())
+	if err != nil {
+		log.Fatalf("Error initializing Firebase Cloud Messaging client: %v\n", err)
+	}
 }
 
 func VerifyIDToken(idToken string) (*auth.Token, error) {
@@ -58,4 +65,20 @@ func VerifyIDToken(idToken string) (*auth.Token, error) {
 
 	// Return the decoded token (which contains the user's UID and other claims)
 	return token, nil
+}
+
+func SendNotificationToTopic(topic, title, body string) error {
+	message := &messaging.Message{
+		Notification: &messaging.Notification{
+			Title: title,
+			Body:  body,
+		},
+		Topic: topic,
+	}
+
+	_, err := fcmClient.Send(context.Background(), message)
+	if err != nil {
+		return err
+	}
+	return nil
 }
