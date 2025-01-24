@@ -19,11 +19,11 @@ func main() {
 
 	// Apply CORS middleware
 	r.Use(middleware.CORS)
-
 	// Register routes
 	r.HandleFunc("/register", controller.RegisterHandler).Methods("POST")
 	r.HandleFunc("/login", controller.LoginHandler).Methods("POST")
 	r.HandleFunc("/forget-password", controller.ForgotPasswordHandler).Methods("POST")
+	r.HandleFunc("/delete_account", controller.DeleteAccountHandler).Methods("POST")
 	r.HandleFunc("/resend-verification", controller.ResendVerificationHandler).Methods("POST")
 	r.HandleFunc("/enter_data", controller.EnterDataHandler).Methods("POST")
 	r.HandleFunc("/username", controller.ChangeUsernameHandler).Methods("POST")
@@ -38,6 +38,7 @@ func main() {
 	r.HandleFunc("/posts/tags", controller.GetPostsByTagsHandler).Methods("GET")
 
 	// Start server
+
 	fmt.Println("Server started on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
