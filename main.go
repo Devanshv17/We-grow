@@ -34,6 +34,8 @@ func main() {
 	r.HandleFunc("/profile", controller.GetProfileHandler).Methods("GET")
 	r.HandleFunc("/posts", controller.CreatePostHandler).Methods("POST")
 	r.HandleFunc("/posts", controller.GetPostsHandler).Methods("GET")
+	r.HandleFunc("/posts/flag", controller.FlagPostHandler).Methods("POST")
+	r.HandleFunc("/comments/flag", controller.FlagCommentHandler).Methods("POST")
 	r.HandleFunc("/posts/comment", controller.AddCommentHandler).Methods("POST")
 	r.HandleFunc("/posts/tags", controller.GetPostsByTagsHandler).Methods("GET")
 
