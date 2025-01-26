@@ -175,3 +175,120 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Return the posts, now including comments if requested
 	json.NewEncoder(w).Encode(posts)
 }
+
+func FlagPostHandler(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Query().Get("post_id")
+	if postID == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var request struct {
+		Username string `json:"username"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if request.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve the post
+	var post model.Post
+	postRef := utils.FirebaseDB.NewRef("posts/" + postID)
+	if err := postRef.Get(context.Background(), &post); err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Initialize flags map if nil
+	if post.Flags == nil {
+		post.Flags = make(map[string]bool)
+	}
+
+	// If user hasn't already flagged, increase count
+	if !post.Flags[request.Username] {
+		post.Flags[request.Username] = true
+		post.FlagCount++
+	}
+
+	// Save back to Firebase
+	if err := postRef.Set(context.Background(), post); err != nil {
+		http.Error(w, "Failed to flag post", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":    "Post flagged successfully",
+		"flag_count": post.FlagCount,
+	})
+}
+
+// FlagCommentHandler flags a comment by increasing its flag count and storing the username of the flagger
+func FlagCommentHandler(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Query().Get("post_id")
+	commentID := r.URL.Query().Get("comment_id")
+
+	if postID == "" || commentID == "" {
+		http.Error(w, "Post ID and Comment ID are required", http.StatusBadRequest)
+		return
+	}
+
+	var request struct {
+		Username string `json:"username"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if request.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve the post
+	var post model.Post
+	postRef := utils.FirebaseDB.NewRef("posts/" + postID)
+	if err := postRef.Get(context.Background(), &post); err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Retrieve the comment
+	comment, exists := post.Comments[commentID]
+	if !exists {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
+
+	// Initialize flags map if nil
+	if comment.Flags == nil {
+		comment.Flags = make(map[string]bool)
+	}
+
+	// If user hasn't already flagged, increase count
+	if !comment.Flags[request.Username] {
+		comment.Flags[request.Username] = true
+		comment.FlagCount++
+	}
+
+	// Save updated comment back into post
+	post.Comments[commentID] = comment
+
+	// Save back to Firebase
+	if err := postRef.Set(context.Background(), post); err != nil {
+		http.Error(w, "Failed to flag comment", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":    "Comment flagged successfully",
+		"flag_count": comment.FlagCount,
+	})
+}
