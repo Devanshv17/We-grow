@@ -33,7 +33,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i, tag := range post.Tags {
-		post.Tags[i] = strings.ToLower(strings.TrimSpace(tag)) // Normalize tags
+		post.Tags[i] = strings.TrimSpace(tag) // Normalize tags
 	}
 
 	// Set post metadata
@@ -63,7 +63,7 @@ func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
 	// Split the tags by comma and normalize
 	tags := strings.Split(tagsParam, ",")
 	for i, tag := range tags {
-		tags[i] = strings.ToLower(strings.TrimSpace(tag))
+		tags[i] = strings.TrimSpace(tag)
 	}
 
 	// Fetch all posts
