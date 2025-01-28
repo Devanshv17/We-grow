@@ -56,19 +56,23 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save other user details
-	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/gender").Set(context.Background(), user.Gender)
-	if err != nil {
-		http.Error(w, "Failed to save gender", http.StatusInternalServerError)
-		log.Printf("Failed to save gender: %v\n", err)
-		return
+	// Save other user details conditionally
+	if user.Gender != "" {
+		err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/gender").Set(context.Background(), user.Gender)
+		if err != nil {
+			http.Error(w, "Failed to save gender", http.StatusInternalServerError)
+			log.Printf("Failed to save gender: %v\n", err)
+			return
+		}
 	}
 
-	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/phone_number").Set(context.Background(), user.PhoneNumber)
-	if err != nil {
-		http.Error(w, "Failed to save phone number", http.StatusInternalServerError)
-		log.Printf("Failed to save phone number: %v\n", err)
-		return
+	if user.PhoneNumber != "" {
+		err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/phone_number").Set(context.Background(), user.PhoneNumber)
+		if err != nil {
+			http.Error(w, "Failed to save phone number", http.StatusInternalServerError)
+			log.Printf("Failed to save phone number: %v\n", err)
+			return
+		}
 	}
 
 	// Save hashed password
