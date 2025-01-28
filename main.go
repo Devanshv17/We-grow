@@ -38,6 +38,7 @@ func main() {
 	r.HandleFunc("/comments/flag", controller.FlagCommentHandler).Methods("POST")
 	r.HandleFunc("/posts/comment", controller.AddCommentHandler).Methods("POST")
 	r.HandleFunc("/posts/tags", controller.GetPostsByTagsHandler).Methods("GET")
+	r.HandleFunc("/custom-notif", controller.CustomNotifHandler).Methods("POST")
 
 	// Start server
 
