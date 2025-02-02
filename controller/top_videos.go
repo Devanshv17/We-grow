@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
 )
@@ -51,9 +52,27 @@ func GetTopVideosHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return the top videos in the response
+	// Convert map to slice for sorting
+	videoList := make([]model.Video, 0, len(topVideos))
+	for _, video := range topVideos {
+		videoList = append(videoList, video)
+	}
+
+	// Sort videos in descending order of rank (higher rank first)
+	sort.Slice(videoList, func(i, j int) bool {
+		if videoList[i].Rank == nil && videoList[j].Rank == nil {
+			return false // Keep order as is
+		} else if videoList[i].Rank == nil {
+			return false // Nil ranks go to the end
+		} else if videoList[j].Rank == nil {
+			return true // Non-nil ranks come first
+		}
+		return *videoList[i].Rank > *videoList[j].Rank // Higher rank first
+	})
+
+	// Return the sorted top videos
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(topVideos); err != nil {
+	if err := json.NewEncoder(w).Encode(videoList); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		log.Printf("Failed to encode response: %v\n", err)
 	}
