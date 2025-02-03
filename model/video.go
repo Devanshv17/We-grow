@@ -10,5 +10,5 @@ type Video struct {
 	IsTopVideo  bool     `json:"isTopVideo"`
 	Thumbnail   string   `json:"thumbnail"`
 	Rank        int      `json:"rank"`
-	Citations   string   `json:"Citations`
+	Citations   string   `json:"Citations"`
 }
