@@ -1,3 +1,4 @@
+// models/video.go
 package model
 
 type Video struct {
@@ -8,5 +9,5 @@ type Video struct {
 	Description string   `json:"description"`
 	IsTopVideo  bool     `json:"isTopVideo"`
 	Thumbnail   string   `json:"thumbnail"`
-	Rank        *int     `json:"rank,omitempty"`
+	Rank        int      `json:"rank"`
 }

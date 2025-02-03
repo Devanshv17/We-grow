@@ -95,14 +95,7 @@ func GetVideosHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Sort videos in descending order of rank (higher rank first)
 	sort.Slice(videoList, func(i, j int) bool {
-		if videoList[i].Rank == nil && videoList[j].Rank == nil {
-			return false // Keep order as is
-		} else if videoList[i].Rank == nil {
-			return false // Nil ranks go to the end
-		} else if videoList[j].Rank == nil {
-			return true // Non-nil ranks come first
-		}
-		return *videoList[i].Rank > *videoList[j].Rank // Higher rank first
+		return videoList[i].Rank > videoList[j].Rank
 	})
 
 	// Return the sorted videos
