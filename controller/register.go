@@ -85,5 +85,5 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Successfully created user
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("User registered successfully"))
+	w.Write([]byte("Registered Successful, Please Verify your Email"))
 }
