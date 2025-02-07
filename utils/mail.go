@@ -131,15 +131,15 @@ func ResendVerificationEmail(email string) error {
 
 	// Construct the email body with the new content
 	body := fmt.Sprintf(`
-		<p>Dear Family Member,</p>
-		<p>Congratulations on starting this beautiful journey of Parenthood! Remember, we're here to support you at every step of the way. From expert guidance to a warm community, you’ve got a partner in us. Verify your email below to start exploring.</p>
+		<p>To get started, please confirm your email address by clicking the button below:</p>
 		<p><a href="%s">🔗 Verify Your Email</a></p>
-		<p>💡 Follow us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
-		<p>Happy Parenting! 🌿💚</p>
+		<p>Once your email is verified, you’ll gain full access to our platform and resources.</p>
+		<p>Best regards,</p>
+		<p>The We Grow Team</>
 	`, link)
 
 	// Call the sendEmail function to send the email
-	err = SendEmail(email, "Welcome to We Grow Family! 💚", body)
+	err = SendEmail(email, "Confirm Your Email ID", body)
 	if err != nil {
 		return fmt.Errorf("error sending verification email: %v", err)
 	}
