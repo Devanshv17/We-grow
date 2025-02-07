@@ -46,7 +46,7 @@ func SendEmail(to, subject, body string) error {
 func SendVerificationEmail(user *auth.UserRecord) error {
 	// Generate email verification link with settings
 	settings := &auth.ActionCodeSettings{
-		URL:             fmt.Sprintf("https://%s.firebaseapp.com/", os.Getenv("FIREBASE_PROJECT_ID")),
+		URL:             "https://wegrowparenting.com",
 		HandleCodeInApp: true,
 	}
 	// Send email with the verification link
@@ -78,7 +78,12 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 
 func SendPasswordResetEmail(email string) error {
 	// Generate password reset link
-	link, err := FirebaseAuth.PasswordResetLinkWithSettings(context.Background(), email, nil)
+	settings := &auth.ActionCodeSettings{
+		URL:             "https://wegrowparenting.com",
+		HandleCodeInApp: true,
+	}
+
+	link, err := FirebaseAuth.PasswordResetLinkWithSettings(context.Background(), email, settings)
 	if err != nil {
 		return fmt.Errorf("error generating password reset link: %v", err)
 	}
@@ -114,7 +119,7 @@ func ResendVerificationEmail(email string) error {
 
 	// Generate email verification link with settings
 	settings := &auth.ActionCodeSettings{
-		URL:             fmt.Sprintf("https://%s.firebaseapp.com/", os.Getenv("FIREBASE_PROJECT_ID")),
+		URL:             "https://wegrowparenting.com",
 		HandleCodeInApp: true,
 	}
 	link, err := FirebaseAuth.EmailVerificationLinkWithSettings(context.Background(), email, settings)
