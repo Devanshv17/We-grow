@@ -57,19 +57,22 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 	// Log the verification link
 	fmt.Printf("Verification link for user %s: %s\n", user.Email, link)
 
-	// Construct the email body with the link
-	body := fmt.Sprintf("<p>Please click the following link to verify your email address:</p><p><a href=\"%s\">Verify Email</a></p>", link)
-	// Replace recipientEmail with the actual email address of the user
-	recipientEmail := user.Email
+	// Construct the email body with the new content
+	body := fmt.Sprintf(`
+		<p>Dear Family Member,</p>
+		<p>Congratulations on starting this beautiful journey of Parenthood! Remember, we're here to support you at every step of the way. From expert guidance to a warm community, you’ve got a partner in us. Verify your email below to start exploring.</p>
+		<p><a href="%s">🔗 Verify Your Email</a></p>
+		<p>💡 Follow us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
+		<p>Happy Parenting! 🌿💚</p>
+	`, link)
 
 	// Call the sendEmail function to send the email
-	err = SendEmail(recipientEmail, "Verify your email address", body)
+	err = SendEmail(user.Email, "Welcome to We Grow Family! 💚", body)
 	if err != nil {
 		return fmt.Errorf("error sending email: %v", err)
 	}
 
 	fmt.Println("Verification email sent successfully")
-
 	return nil
 }
 
@@ -82,10 +85,18 @@ func SendPasswordResetEmail(email string) error {
 	// Log the password reset link
 	fmt.Printf("Password reset link for user %s: %s\n", email, link)
 
-	// Construct the email body with the link
-	body := fmt.Sprintf("<p>Please click the following link to reset your password:</p><p><a href=\"%s\">Reset Password</a></p>", link)
+	// Construct the email body with engaging content
+	body := fmt.Sprintf(`
+		<p>Dear We Grow Family Member,</p>
+		<p>We understand that sometimes passwords slip our minds. No worries! You can reset your password quickly by clicking the link below.</p>
+		<p><a href="%s">🔗 Reset Your Password</a></p>
+		<p>Need further assistance? Feel free to reach out to our support team. We’re always here to help!</p>
+		<p>💡 Stay connected with us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
+		<p>Warm regards,<br/>We Grow Team 🌿💚</p>
+	`, link)
+
 	// Call the sendEmail function to send the email
-	err = SendEmail(email, "Reset your password", body)
+	err = SendEmail(email, "Reset Your Password - We Grow", body)
 	if err != nil {
 		return fmt.Errorf("error sending password reset email: %v", err)
 	}
@@ -113,16 +124,21 @@ func ResendVerificationEmail(email string) error {
 	// Log the verification link
 	fmt.Printf("Verification link for user %s: %s\n", email, link)
 
-	// Construct the email body with the link
-	body := fmt.Sprintf("<p>Please click the following link to verify your email address:</p><p><a href=\"%s\">Verify Email</a></p>", link)
+	// Construct the email body with the new content
+	body := fmt.Sprintf(`
+		<p>Dear Family Member,</p>
+		<p>Congratulations on starting this beautiful journey of Parenthood! Remember, we're here to support you at every step of the way. From expert guidance to a warm community, you’ve got a partner in us. Verify your email below to start exploring.</p>
+		<p><a href="%s">🔗 Verify Your Email</a></p>
+		<p>💡 Follow us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
+		<p>Happy Parenting! 🌿💚</p>
+	`, link)
 
 	// Call the sendEmail function to send the email
-	err = SendEmail(email, "Verify your email address", body)
+	err = SendEmail(email, "Welcome to We Grow Family! 💚", body)
 	if err != nil {
 		return fmt.Errorf("error sending verification email: %v", err)
 	}
 
 	fmt.Println("Verification email sent successfully")
-
 	return nil
 }
