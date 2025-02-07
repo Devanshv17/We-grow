@@ -59,15 +59,15 @@ func SendVerificationEmail(user *auth.UserRecord) error {
 
 	// Construct the email body with the new content
 	body := fmt.Sprintf(`
-		<p>Dear Family Member,</p>
-		<p>Congratulations on starting this beautiful journey of Parenthood! Remember, we're here to support you at every step of the way. From expert guidance to a warm community, you’ve got a partner in us. Verify your email below to start exploring.</p>
+		<p>To get started, please confirm your email address by clicking the button below:</p>
 		<p><a href="%s">🔗 Verify Your Email</a></p>
-		<p>💡 Follow us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
-		<p>Happy Parenting! 🌿💚</p>
+		<p>Once your email is verified, you’ll gain full access to our platform and resources.</p>
+		<p>Best regards,</p>
+		<p>The We Grow Team</>
 	`, link)
 
 	// Call the sendEmail function to send the email
-	err = SendEmail(user.Email, "Welcome to We Grow Family! 💚", body)
+	err = SendEmail(user.Email, "Confirm Your Email ID", body)
 	if err != nil {
 		return fmt.Errorf("error sending email: %v", err)
 	}
@@ -92,12 +92,10 @@ func SendPasswordResetEmail(email string) error {
 
 	// Construct the email body with engaging content
 	body := fmt.Sprintf(`
-		<p>Dear We Grow Family Member,</p>
 		<p>We understand that sometimes passwords slip our minds. No worries! You can reset your password quickly by clicking the link below.</p>
 		<p><a href="%s">🔗 Reset Your Password</a></p>
 		<p>Need further assistance? Feel free to reach out to our support team. We’re always here to help!</p>
-		<p>💡 Stay connected with us on <a href="https://www.instagram.com/wegrowparenting?igsh=MXhtMTFmcHh1NDI4YQ==">Instagram</a> and <a href="https://youtube.com/@wegrowparenting?si=0hZc-iH0msSHBblE">YouTube</a> for daily parenting tips & support!</p>
-		<p>Warm regards,<br/>We Grow Team 🌿💚</p>
+		<p>Warm regards,<br/>We Grow Team</p>
 	`, link)
 
 	// Call the sendEmail function to send the email
