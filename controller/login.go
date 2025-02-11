@@ -71,6 +71,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve username from Firebase Database
 	var username string
 	err = utils.FirebaseDB.NewRef("users/"+u.UID+"/username").Get(context.Background(), &username)
 	if err != nil {
@@ -78,11 +79,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		username = ""
 	}
 
-	// Prepare response payload with UID and role
+	// Retrieve profile image from Firebase Database; default to 1 if retrieval fails.
+	var profileImage int
+	err = utils.FirebaseDB.NewRef("users/"+u.UID+"/profile_image").Get(context.Background(), &profileImage)
+	if err != nil {
+		log.Printf("Failed to retrieve profile image for user %s. Defaulting to 1.", u.UID)
+		profileImage = 1
+	}
+
+	// Prepare response payload with UID, username, role, and profile image
 	response := map[string]interface{}{
-		"user_id":  u.UID,
-		"username": username,
-		"role":     role,
+		"user_id":       u.UID,
+		"username":      username,
+		"role":          role,
+		"profile_image": profileImage,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
