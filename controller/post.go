@@ -292,3 +292,47 @@ func FlagCommentHandler(w http.ResponseWriter, r *http.Request) {
 		"flag_count": comment.FlagCount,
 	})
 }
+
+// GetFlaggedPostsHandler fetches all posts that have been flagged
+func GetFlaggedPostsHandler(w http.ResponseWriter, r *http.Request) {
+	var posts map[string]model.Post
+	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter posts that have been flagged
+	flaggedPosts := make(map[string]model.Post)
+	for postID, post := range posts {
+		if post.FlagCount > 0 { // Only include flagged posts
+			flaggedPosts[postID] = post
+		}
+	}
+
+	json.NewEncoder(w).Encode(flaggedPosts)
+}
+
+// GetFlaggedCommentsHandler fetches all comments that have been flagged
+func GetFlaggedCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	var posts map[string]model.Post
+	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	flaggedComments := make(map[string]map[string]model.Comment)
+
+	// Iterate over posts and collect flagged comments
+	for postID, post := range posts {
+		for commentID, comment := range post.Comments {
+			if comment.FlagCount > 0 { // Only include flagged comments
+				if _, exists := flaggedComments[postID]; !exists {
+					flaggedComments[postID] = make(map[string]model.Comment)
+				}
+				flaggedComments[postID][commentID] = comment
+			}
+		}
+	}
+
+	json.NewEncoder(w).Encode(flaggedComments)
+}

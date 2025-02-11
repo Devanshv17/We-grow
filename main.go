@@ -36,6 +36,8 @@ func main() {
 	r.HandleFunc("/posts", controller.GetPostsHandler).Methods("GET")
 	r.HandleFunc("/posts/flag", controller.FlagPostHandler).Methods("POST")
 	r.HandleFunc("/comments/flag", controller.FlagCommentHandler).Methods("POST")
+	r.HandleFunc("/posts/flag", controller.GetFlaggedPostsHandler).Methods("GET")
+	r.HandleFunc("/comments/flag", controller.GetFlaggedCommentsHandler).Methods("GET")
 	r.HandleFunc("/posts/comment", controller.AddCommentHandler).Methods("POST")
 	r.HandleFunc("/posts/tags", controller.GetPostsByTagsHandler).Methods("GET")
 	r.HandleFunc("/custom-notif", controller.CustomNotifHandler).Methods("POST")

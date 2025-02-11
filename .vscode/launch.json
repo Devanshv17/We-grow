@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/devansh/untitled folder",
-      "program": "/Users/devansh/untitled folder/build/Debug/outDebug"
+      "cwd": "/Users/devansh",
+      "program": "/Users/devansh/build/Debug/outDebug"
     }
   ]
 }
