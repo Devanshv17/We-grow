@@ -43,6 +43,7 @@ func main() {
 	r.HandleFunc("/custom-notif", controller.CustomNotifHandler).Methods("POST")
 	r.HandleFunc("/tips", controller.SaveTipHandler).Methods("POST")
 	r.HandleFunc("/tips", controller.GetTipsHandler).Methods("GET")
+	r.HandleFunc("/profile_image", controller.GetProfileImageHandler).Methods("GET")
 
 	// Start server
 
