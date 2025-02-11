@@ -17,7 +17,7 @@ type EnterDataRequest struct {
 	Gender       string `json:"gender"` // 'male', 'female', 'others'
 	City         string `json:"city"`
 	ChildDOB     string `json:"child_dob"`
-	ProfileImage int    `json:"profile_image,omitempty"` // Optional field for profile image number (1-10)
+	ProfileImage int    `json:"profile_image"` // Optional field for profile image number (1-10)
 }
 
 // EnterDataHandler function to update user data
