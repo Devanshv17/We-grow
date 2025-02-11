@@ -6,7 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"firebase.google.com/go/auth"
 	"golang.org/x/crypto/bcrypt"
@@ -80,6 +82,18 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to save user password", http.StatusInternalServerError)
 		log.Printf("Failed to save user password: %v\n", err)
+		return
+	}
+
+	// Generate a random number between 1 and 10 for profile image assignment
+	rand.Seed(time.Now().UnixNano())
+	profileImage := rand.Intn(10) + 1 // random number in [1,10]
+
+	// Save the profile image number in Firebase Database
+	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/profile_image").Set(context.Background(), profileImage)
+	if err != nil {
+		http.Error(w, "Failed to save profile image", http.StatusInternalServerError)
+		log.Printf("Failed to save profile image: %v\n", err)
 		return
 	}
 
