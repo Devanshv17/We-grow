@@ -41,10 +41,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !u.EmailVerified {
-		http.Error(w, "Email not verified", http.StatusUnauthorized)
-		return
-	}
+	// Email verification check is commented out.
+	/*
+		if !u.EmailVerified {
+			http.Error(w, "Email not verified", http.StatusUnauthorized)
+			return
+		}
+	*/
 
 	// Retrieve hashed password from Firebase Database
 	var hashedPassword string

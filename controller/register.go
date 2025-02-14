@@ -42,13 +42,15 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send verification email
-	err = utils.SendVerificationEmail(newUser)
-	if err != nil {
-		http.Error(w, "Failed to send verification email", http.StatusInternalServerError)
-		log.Printf("Failed to send verification email: %v\n", err)
-		return
-	}
+	// Email verification code is commented out.
+	/*
+		err = utils.SendVerificationEmail(newUser)
+		if err != nil {
+			http.Error(w, "Failed to send verification email", http.StatusInternalServerError)
+			log.Printf("Failed to send verification email: %v\n", err)
+			return
+		}
+	*/
 
 	// Assign role to the user in Firebase Database
 	err = utils.FirebaseDB.NewRef("users/"+newUser.UID+"/role").Set(context.Background(), user.Role)
@@ -99,5 +101,5 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Successfully created user
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Verification email sent.\nPlease verify your email."))
+	w.Write([]byte("User registered successfully."))
 }
