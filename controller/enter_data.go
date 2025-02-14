@@ -30,7 +30,7 @@ func EnterDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate gender
-	if req.Gender != "male" && req.Gender != "female" && req.Gender != "others" {
+	if req.Gender != "male" && req.Gender != "female" && req.Gender != "others" && req.Gender != "" {
 		http.Error(w, "Invalid gender option", http.StatusBadRequest)
 		log.Println("Invalid gender option:", req.Gender)
 		return
