@@ -336,3 +336,30 @@ func GetFlaggedCommentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(flaggedComments)
 }
+
+// GetPostsByUsernameHandler fetches all posts created by a specific user
+func GetPostsByUsernameHandler(w http.ResponseWriter, r *http.Request) {
+	// Get username from query parameters
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch all posts
+	var posts map[string]model.Post
+	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Filter posts by username
+	userPosts := make(map[string]model.Post)
+	for postID, post := range posts {
+		if post.Username == username {
+			userPosts[postID] = post
+		}
+	}
+
+	json.NewEncoder(w).Encode(userPosts)
+}
