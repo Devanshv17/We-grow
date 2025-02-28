@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -150,7 +149,7 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
-	// Set a default limit of 4 posts.
+	// Set a default limit of 5 posts.
 	limit := 4
 	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
 		if l, err := strconv.Atoi(limitParam); err == nil {
@@ -170,7 +169,7 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// If a valid startAfter parameter is provided, update the query.
 	if startAfterParam != "" {
 		if startAfter, err := strconv.ParseInt(startAfterParam, 10, 64); err == nil {
-			// Add 1 to the timestamp to avoid re-fetching the last post.
+			// Add 1 to the timestamp to avoid including the last fetched post again.
 			query = query.StartAt(startAfter + 1)
 		} else {
 			log.Println("Invalid startAfter parameter:", startAfterParam)
@@ -203,26 +202,8 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Convert the map of posts to a slice for sorting.
-	postsSlice := make([]model.Post, 0, len(posts))
-	for _, p := range posts {
-		postsSlice = append(postsSlice, p)
-	}
-
-	// Sort posts so that admin posts (username "admin") are at the top,
-	// and the rest are in descending order by createdAt.
-	sort.Slice(postsSlice, func(i, j int) bool {
-		isAdminI := strings.ToLower(postsSlice[i].Username) == "admin"
-		isAdminJ := strings.ToLower(postsSlice[j].Username) == "admin"
-		if isAdminI && !isAdminJ {
-			return true
-		} else if !isAdminI && isAdminJ {
-			return false
-		}
-		return postsSlice[i].CreatedAt > postsSlice[j].CreatedAt
-	})
-
-	json.NewEncoder(w).Encode(postsSlice)
+	// Return the fetched posts as JSON.
+	json.NewEncoder(w).Encode(posts)
 }
 
 func FlagPostHandler(w http.ResponseWriter, r *http.Request) {
