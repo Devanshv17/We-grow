@@ -5,7 +5,9 @@ import (
 	"backend/utils"
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -146,33 +148,61 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(comment)
 }
 
-// GetPostsHandler fetches all posts and optionally includes comments
 func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
+	// Set a default limit of 5 posts.
+	limit := 5
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if l, err := strconv.Atoi(limitParam); err == nil {
+			limit = l
+		} else {
+			log.Println("Invalid limit parameter:", limitParam)
+		}
+	}
+
+	// Retrieve the starting timestamp for pagination (if provided).
+	startAfterParam := r.URL.Query().Get("startAfter")
+
+	// Begin the Firebase query ordering by the "created_at" field.
+	ref := utils.FirebaseDB.NewRef("posts")
+	query := ref.OrderByChild("created_at")
+
+	// If a valid startAfter parameter is provided, update the query.
+	if startAfterParam != "" {
+		if startAfter, err := strconv.ParseInt(startAfterParam, 10, 64); err == nil {
+			// Add 1 to the timestamp to avoid including the last fetched post again.
+			query = query.StartAt(startAfter + 1)
+		} else {
+			log.Println("Invalid startAfter parameter:", startAfterParam)
+		}
+	}
+
+	// Limit the query to the desired number of posts.
+	query = query.LimitToFirst(limit)
+
+	// Execute the query.
 	var posts map[string]model.Post
-	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+	if err := query.Get(context.Background(), &posts); err != nil {
+		log.Println("Error fetching posts:", err)
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
-	// Check if comments should be included (optional query param)
+	// Optionally include comments if requested.
 	includeComments := r.URL.Query().Get("includeComments") == "true"
-	if includeComments {
+	if includeComments && posts != nil {
 		for postID, post := range posts {
-			// Fetch the comments for each post directly from Firebase
 			var comments map[string]model.Comment
-			err := utils.FirebaseDB.NewRef("posts/"+postID+"/comments").Get(context.Background(), &comments)
-			if err != nil {
+			if err := utils.FirebaseDB.NewRef("posts/"+postID+"/comments").Get(context.Background(), &comments); err != nil {
+				log.Println("Error fetching comments for post", postID, ":", err)
 				http.Error(w, "Failed to fetch comments for post "+postID, http.StatusInternalServerError)
 				return
 			}
-
-			// Directly assign the fetched comments (no need to convert to a slice)
 			post.Comments = comments
 			posts[postID] = post
 		}
 	}
 
-	// Return the posts, now including comments if requested
+	// Return the fetched posts as JSON.
 	json.NewEncoder(w).Encode(posts)
 }
 
