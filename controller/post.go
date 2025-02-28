@@ -40,7 +40,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Set post metadata
 	post.ID = uuid.New().String()
-	post.CreatedAt = time.Now().Unix()
+	post.CreatedAt = -time.Now().Unix()
 	post.IsResolved = false
 
 	// Save post to Firebase
