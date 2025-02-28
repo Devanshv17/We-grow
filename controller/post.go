@@ -150,7 +150,7 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Set a default limit of 5 posts.
-	limit := 5
+	limit := 4
 	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
 		if l, err := strconv.Atoi(limitParam); err == nil {
 			limit = l
