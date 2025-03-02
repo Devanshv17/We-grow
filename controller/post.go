@@ -62,25 +62,55 @@ func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Split the tags by comma and normalize
+	// Split and normalize tags
 	tags := strings.Split(tagsParam, ",")
 	for i, tag := range tags {
 		tags[i] = strings.TrimSpace(tag)
 	}
 
-	// Fetch all posts
+	// Set default limit to 4; override if provided in query params.
+	limit := 4
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if l, err := strconv.Atoi(limitParam); err == nil {
+			limit = l
+		} else {
+			log.Println("Invalid limit parameter:", limitParam)
+		}
+	}
+
+	// Retrieve starting timestamp for pagination if provided.
+	startAfterParam := r.URL.Query().Get("startAfter")
+
+	// Begin Firebase query ordered by "created_at".
+	ref := utils.FirebaseDB.NewRef("posts")
+	query := ref.OrderByChild("created_at")
+
+	// If a valid startAfter parameter is provided, update the query.
+	if startAfterParam != "" {
+		if startAfter, err := strconv.ParseInt(startAfterParam, 10, 64); err == nil {
+			// Add 1 to the timestamp to avoid including the last fetched post again.
+			query = query.StartAt(startAfter + 1)
+		} else {
+			log.Println("Invalid startAfter parameter:", startAfterParam)
+		}
+	}
+
+	// Limit the query to the desired number of posts.
+	query = query.LimitToFirst(limit)
+
+	// Execute the query.
 	var posts map[string]model.Post
-	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+	if err := query.Get(context.Background(), &posts); err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
-	// Filter posts by tags
+	// Filter posts by matching tags.
 	matchingPosts := make(map[string]model.Post)
 	for postID, post := range posts {
-		for _, tag := range post.Tags {
+		for _, postTag := range post.Tags {
 			for _, queryTag := range tags {
-				if tag == queryTag {
+				if postTag == queryTag {
 					matchingPosts[postID] = post
 					break
 				}
@@ -368,6 +398,8 @@ func GetFlaggedCommentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetPostsByUsernameHandler fetches all posts created by a specific user
+// GetPostsByUsernameHandler fetches posts created by a specific user,
+// with pagination and ordering by created_at (default limit is 4).
 func GetPostsByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	// Get username from query parameters
 	username := r.URL.Query().Get("username")
@@ -376,14 +408,44 @@ func GetPostsByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch all posts
+	// Set default limit to 4; override if provided in query params.
+	limit := 4
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if l, err := strconv.Atoi(limitParam); err == nil {
+			limit = l
+		} else {
+			log.Println("Invalid limit parameter:", limitParam)
+		}
+	}
+
+	// Retrieve starting timestamp for pagination if provided.
+	startAfterParam := r.URL.Query().Get("startAfter")
+
+	// Begin Firebase query ordered by "created_at".
+	ref := utils.FirebaseDB.NewRef("posts")
+	query := ref.OrderByChild("created_at")
+
+	// If a valid startAfter parameter is provided, update the query.
+	if startAfterParam != "" {
+		if startAfter, err := strconv.ParseInt(startAfterParam, 10, 64); err == nil {
+			// Add 1 to the timestamp to avoid including the last fetched post again.
+			query = query.StartAt(startAfter + 1)
+		} else {
+			log.Println("Invalid startAfter parameter:", startAfterParam)
+		}
+	}
+
+	// Limit the query to the desired number of posts.
+	query = query.LimitToFirst(limit)
+
+	// Execute the query.
 	var posts map[string]model.Post
-	if err := utils.FirebaseDB.NewRef("posts").Get(context.Background(), &posts); err != nil {
+	if err := query.Get(context.Background(), &posts); err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
-	// Filter posts by username
+	// Filter posts by username.
 	userPosts := make(map[string]model.Post)
 	for postID, post := range posts {
 		if post.Username == username {
