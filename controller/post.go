@@ -168,10 +168,27 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve post to update CommentCount
+	var post model.Post
+	postRef := utils.FirebaseDB.NewRef("posts/" + postID)
+	if err := postRef.Get(context.Background(), &post); err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
 	// Save the comment directly inside the post under the "comments" field
 	commentRef := utils.FirebaseDB.NewRef("posts/" + postID + "/comments/" + comment.ID)
 	if err := commentRef.Set(context.Background(), comment); err != nil {
 		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
+		return
+	}
+
+	// Increment the CommentCount
+	post.CommentCount++
+
+	// Save updated post back to Firebase
+	if err := postRef.Set(context.Background(), post); err != nil {
+		http.Error(w, "Failed to update comment count", http.StatusInternalServerError)
 		return
 	}
 
@@ -454,4 +471,118 @@ func GetPostsByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(userPosts)
+}
+
+// LikeCommentHandler handles liking and unliking a comment
+func LikeCommentHandler(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Query().Get("post_id")
+	commentID := r.URL.Query().Get("comment_id")
+
+	if postID == "" || commentID == "" {
+		http.Error(w, "Post ID and Comment ID are required", http.StatusBadRequest)
+		return
+	}
+
+	var request struct {
+		Username string `json:"username"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if request.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve the comment
+	var comment model.Comment
+	commentRef := utils.FirebaseDB.NewRef("posts/" + postID + "/comments/" + commentID)
+	if err := commentRef.Get(context.Background(), &comment); err != nil {
+		http.Error(w, "Comment not found", http.StatusNotFound)
+		return
+	}
+
+	// Initialize likes map if nil
+	if comment.Likes == nil {
+		comment.Likes = make(map[string]bool)
+	}
+
+	// Toggle like status
+	if comment.Likes[request.Username] {
+		delete(comment.Likes, request.Username)
+		comment.LikeCount--
+	} else {
+		comment.Likes[request.Username] = true
+		comment.LikeCount++
+	}
+
+	// Save back to Firebase
+	if err := commentRef.Set(context.Background(), comment); err != nil {
+		http.Error(w, "Failed to update like status", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":    "Like status updated",
+		"like_count": comment.LikeCount,
+	})
+}
+
+// LikePostHandler handles liking and unliking a post
+func LikePostHandler(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Query().Get("post_id")
+	if postID == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var request struct {
+		Username string `json:"username"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if request.Username == "" {
+		http.Error(w, "Username is required", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve the post
+	var post model.Post
+	postRef := utils.FirebaseDB.NewRef("posts/" + postID)
+	if err := postRef.Get(context.Background(), &post); err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	// Initialize likes map if nil
+	if post.Likes == nil {
+		post.Likes = make(map[string]bool)
+	}
+
+	// Toggle like status
+	if post.Likes[request.Username] {
+		delete(post.Likes, request.Username)
+		post.LikeCount--
+	} else {
+		post.Likes[request.Username] = true
+		post.LikeCount++
+	}
+
+	// Save back to Firebase
+	if err := postRef.Set(context.Background(), post); err != nil {
+		http.Error(w, "Failed to update like status", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message":    "Like status updated",
+		"like_count": post.LikeCount,
+	})
 }
