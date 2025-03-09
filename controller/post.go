@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -56,14 +57,14 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetPostsByTagsHandler fetches posts that match specific tags
 func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
-	// Get tags from query parameters
+	// Get tags from query parameters.
 	tagsParam := r.URL.Query().Get("tags")
 	if tagsParam == "" {
 		http.Error(w, "Tags are required", http.StatusBadRequest)
 		return
 	}
 
-	// Split and normalize tags
+	// Split and normalize tags.
 	tags := strings.Split(tagsParam, ",")
 	for i, tag := range tags {
 		tags[i] = strings.TrimSpace(tag)
@@ -81,6 +82,10 @@ func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve starting timestamp for pagination if provided.
 	startAfterParam := r.URL.Query().Get("startAfter")
+	effectiveLimit := limit
+	if startAfterParam != "" {
+		effectiveLimit = limit + 1
+	}
 
 	// Begin Firebase query ordered by "created_at".
 	ref := utils.FirebaseDB.NewRef("posts")
@@ -89,37 +94,67 @@ func GetPostsByTagsHandler(w http.ResponseWriter, r *http.Request) {
 	// If a valid startAfter parameter is provided, update the query.
 	if startAfterParam != "" {
 		if startAfter, err := strconv.ParseInt(startAfterParam, 10, 64); err == nil {
-			// Add 1 to the timestamp to avoid including the last fetched post again.
+			// Adding 1 avoids including the last fetched post again.
 			query = query.StartAt(startAfter + 1)
 		} else {
 			log.Println("Invalid startAfter parameter:", startAfterParam)
 		}
 	}
 
-	// Limit the query to the desired number of posts.
-	query = query.LimitToFirst(limit)
+	// Limit the query to the effective limit.
+	query = query.LimitToFirst(effectiveLimit)
 
 	// Execute the query.
-	var posts map[string]model.Post
-	if err := query.Get(context.Background(), &posts); err != nil {
+	var postsMap map[string]model.Post
+	if err := query.Get(context.Background(), &postsMap); err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
+	// Convert the returned map to a slice for sorting.
+	postsSlice := make([]model.Post, 0, len(postsMap))
+	for _, post := range postsMap {
+		postsSlice = append(postsSlice, post)
+	}
+
+	// Sort posts by created_at in ascending order.
+	// (Since you're using a negated timestamp, the most recent posts have a lower value.)
+	sort.Slice(postsSlice, func(i, j int) bool {
+		return postsSlice[i].CreatedAt < postsSlice[j].CreatedAt
+	})
+
+	// If pagination is used, remove the first duplicate record.
+	if startAfterParam != "" && len(postsSlice) > 0 {
+		postsSlice = postsSlice[1:]
+	}
+
+	// Truncate the slice to the requested limit.
+	if len(postsSlice) > limit {
+		postsSlice = postsSlice[:limit]
+	}
+
 	// Filter posts by matching tags.
-	matchingPosts := make(map[string]model.Post)
-	for postID, post := range posts {
+	filteredPosts := make([]model.Post, 0)
+	for _, post := range postsSlice {
+		// Check if any of the post's tags match one of the query tags.
+		matched := false
 		for _, postTag := range post.Tags {
 			for _, queryTag := range tags {
 				if postTag == queryTag {
-					matchingPosts[postID] = post
+					matched = true
 					break
 				}
 			}
+			if matched {
+				break
+			}
+		}
+		if matched {
+			filteredPosts = append(filteredPosts, post)
 		}
 	}
 
-	json.NewEncoder(w).Encode(matchingPosts)
+	json.NewEncoder(w).Encode(filteredPosts)
 }
 
 // AddCommentHandler adds a comment to a specific post
@@ -197,7 +232,7 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
-	// Set a default limit of 5 posts.
+	// Set a default limit of 4 posts.
 	limit := 4
 	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
 		if l, err := strconv.Atoi(limitParam); err == nil {
@@ -209,6 +244,11 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the starting timestamp for pagination (if provided).
 	startAfterParam := r.URL.Query().Get("startAfter")
+	// When paginating, fetch one extra record so that we can drop the duplicate.
+	effectiveLimit := limit
+	if startAfterParam != "" {
+		effectiveLimit = limit + 1
+	}
 
 	// Begin the Firebase query ordering by the "created_at" field.
 	ref := utils.FirebaseDB.NewRef("posts")
@@ -225,33 +265,52 @@ func GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Limit the query to the desired number of posts.
-	query = query.LimitToFirst(limit)
+	query = query.LimitToFirst(effectiveLimit)
 
 	// Execute the query.
-	var posts map[string]model.Post
-	if err := query.Get(context.Background(), &posts); err != nil {
+	var postsMap map[string]model.Post
+	if err := query.Get(context.Background(), &postsMap); err != nil {
 		log.Println("Error fetching posts:", err)
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
+	// Convert the map to a slice to be able to sort and manipulate the order.
+	postsSlice := make([]model.Post, 0, len(postsMap))
+	for _, post := range postsMap {
+		postsSlice = append(postsSlice, post)
+	}
+
+	// Sort posts by created_at (ascending order since we use negated timestamps;
+	// the most recent posts will have a lower (more negative) value).
+	sort.Slice(postsSlice, func(i, j int) bool {
+		return postsSlice[i].CreatedAt < postsSlice[j].CreatedAt
+	})
+
+	// If pagination was used (startAfter provided), remove the first duplicate record.
+	if startAfterParam != "" && len(postsSlice) > 0 {
+		postsSlice = postsSlice[1:]
+	}
+
+	// Truncate the slice to the requested limit in case we have an extra record.
+	if len(postsSlice) > limit {
+		postsSlice = postsSlice[:limit]
+	}
+
 	// Optionally include comments if requested.
-	includeComments := r.URL.Query().Get("includeComments") == "true"
-	if includeComments && posts != nil {
-		for postID, post := range posts {
+	if r.URL.Query().Get("includeComments") == "true" {
+		for i, post := range postsSlice {
 			var comments map[string]model.Comment
-			if err := utils.FirebaseDB.NewRef("posts/"+postID+"/comments").Get(context.Background(), &comments); err != nil {
-				log.Println("Error fetching comments for post", postID, ":", err)
-				http.Error(w, "Failed to fetch comments for post "+postID, http.StatusInternalServerError)
+			if err := utils.FirebaseDB.NewRef("posts/"+post.ID+"/comments").Get(context.Background(), &comments); err != nil {
+				log.Println("Error fetching comments for post", post.ID, ":", err)
+				http.Error(w, "Failed to fetch comments for post "+post.ID, http.StatusInternalServerError)
 				return
 			}
-			post.Comments = comments
-			posts[postID] = post
+			postsSlice[i].Comments = comments
 		}
 	}
 
-	// Return the fetched posts as JSON.
-	json.NewEncoder(w).Encode(posts)
+	json.NewEncoder(w).Encode(postsSlice)
 }
 
 func FlagPostHandler(w http.ResponseWriter, r *http.Request) {
