@@ -40,7 +40,8 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Set post metadata
 	post.ID = uuid.New().String()
-	post.CreatedAt = -time.Now().Unix()
+	// Use UnixNano (and negate it) to get a high-precision timestamp for sorting from new to older.
+	post.CreatedAt = -time.Now().UnixNano()
 	post.IsResolved = false
 
 	// Save post to Firebase
@@ -414,8 +415,7 @@ func GetFlaggedCommentsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(flaggedComments)
 }
 
-// GetPostsByUsernameHandler fetches all posts created by a specific user
-// GetPostsByUsernameHandler fetches posts created by a specific user,
+// GetPostsByUsernameHandler fetches all posts created by a specific user,
 // with pagination and ordering by created_at (default limit is 4).
 func GetPostsByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 	// Get username from query parameters
