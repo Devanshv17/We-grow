@@ -187,11 +187,19 @@ func AddCommentHandler(w http.ResponseWriter, r *http.Request) {
 	// Increment the CommentCount
 	post.CommentCount++
 
-	// Save updated post back to Firebase
-	if err := postRef.Set(context.Background(), post); err != nil {
+	if err := postRef.Update(context.Background(), map[string]interface{}{
+		"comment_count": post.CommentCount,
+	}); err != nil {
+		log.Println("Failed to update comment count:", err)
 		http.Error(w, "Failed to update comment count", http.StatusInternalServerError)
 		return
 	}
+
+	// Save updated post back to Firebase
+	// if err := postRef.Set(context.Background(), post); err != nil {
+	// 	http.Error(w, "Failed to update comment count", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	json.NewEncoder(w).Encode(comment)
 }
